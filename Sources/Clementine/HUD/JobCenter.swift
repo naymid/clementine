@@ -5,8 +5,9 @@ import Combine
 struct Job {
     var title: String
     var items: [URL]
-    var perItem: ((URL, JobContext) async throws -> [URL])?
-    var batch: (([URL], JobContext) async throws -> [URL])?
+    // @Sendable so the work runs off the main actor even when written inside a view.
+    var perItem: (@Sendable (URL, JobContext) async throws -> [URL])?
+    var batch: (@Sendable ([URL], JobContext) async throws -> [URL])?
     var successTitle: ((_ outputs: [URL]) -> String)?
     var revealOutputs = true
     var onFinish: ((_ outputs: [URL], _ failures: [String]) -> Void)?
@@ -104,7 +105,7 @@ final class JobCenter: ObservableObject {
             hud.scheduleHide(after: 2.6)
         } else {
             phase = .failed
-            title = produced.isEmpty ? "Conversion failed" : "Finished with errors"
+            title = produced.isEmpty ? "Nothing was saved" : "Finished with errors"
             detail = errors.joined(separator: "\n")
             Feedback.finished(success: false)
         }

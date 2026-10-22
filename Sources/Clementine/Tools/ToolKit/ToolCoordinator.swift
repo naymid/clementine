@@ -31,7 +31,7 @@ final class ToolSession: ObservableObject, Identifiable {
     func runPerItem(title: String? = nil,
                     successTitle: ((_ outputs: [URL]) -> String)? = nil,
                     revealOutputs: Bool = true,
-                    _ work: @escaping (URL, JobContext) async throws -> [URL]) {
+                    _ work: @escaping @Sendable (URL, JobContext) async throws -> [URL]) {
         close()
         JobCenter.shared.enqueue(Job(title: title ?? tool.workingTitle, items: urls, perItem: work,
                                      successTitle: successTitle, revealOutputs: revealOutputs))
@@ -41,7 +41,7 @@ final class ToolSession: ObservableObject, Identifiable {
     func runBatch(title: String? = nil,
                   successTitle: ((_ outputs: [URL]) -> String)? = nil,
                   revealOutputs: Bool = true,
-                  _ work: @escaping ([URL], JobContext) async throws -> [URL]) {
+                  _ work: @escaping @Sendable ([URL], JobContext) async throws -> [URL]) {
         close()
         JobCenter.shared.enqueue(Job(title: title ?? tool.workingTitle, items: urls, batch: work,
                                      successTitle: successTitle, revealOutputs: revealOutputs))
