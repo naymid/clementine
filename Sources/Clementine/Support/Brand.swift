@@ -107,7 +107,7 @@ enum Brand {
             let startRad = (start * .pi / 180) + gap
             let endRad = (end * .pi / 180) - gap
             path.move(to: NSPoint(x: center.x + cos(startRad) * inner, y: center.y + sin(startRad) * inner))
-            path.appendArc(withCenter: center, radius: flesh, startAngle: start + gap * 180 / .pi * 0.35, endAngle: end - gap * 180 / .pi * 0.35)
+            path.appendArc(withCenter: center, radius: flesh, startAngle: start + 2.6, endAngle: end - 2.6)
             path.line(to: NSPoint(x: center.x + cos(endRad) * inner, y: center.y + sin(endRad) * inner))
             path.close()
             path.lineJoinStyle = .round

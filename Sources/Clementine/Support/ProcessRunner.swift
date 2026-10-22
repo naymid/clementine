@@ -86,9 +86,7 @@ final class ProcessRunner: @unchecked Sendable {
             }
         }
 
-        lock.lock()
-        self.process = process
-        lock.unlock()
+        lock.withLock { self.process = process }
 
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             process.terminationHandler = { _ in continuation.resume() }

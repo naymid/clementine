@@ -30,6 +30,12 @@ enum CommandLineMode {
                 }
             }
             dispatchMain()
+        case "--snapshot":
+            MainActor.assumeIsolated { Snapshot.run(arguments) }
+            return true
+        case "--tool-test":
+            MainActor.assumeIsolated { ToolTestRegistry.run(arguments) }
+            dispatchMain()
         case "--matrix":
             print("conversions: \(FormatCompatibility.totalConversions)")
             for format in FileFormat.allCases {
