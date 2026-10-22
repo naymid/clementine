@@ -12,6 +12,17 @@ extension SnapshotRegistry {
                 return Entry(view: AnyView(SettingsView(navigation: navigation)), size: settingsSize)
             }
         }
+        for page in WelcomePage.allCases {
+            builders["welcome-\(page.rawValue + 1)"] = { _, arguments in
+                let model = WelcomeWindowController.shared.model
+                model.page = page
+                if arguments.contains("--done") { model.practice = .done(page == .tools ? "coast-ride-smaller.mp4" : "landscape.png") }
+                return Entry(view: AnyView(WelcomeTourView(model: model, onFinish: {})), size: CGSize(width: 560, height: 570))
+            }
+        }
+        builders["welcome-splash"] = { _, _ in
+            Entry(view: AnyView(WelcomeSplashView(onContinue: {}, onClose: {})), size: CGSize(width: 640, height: 420))
+        }
         builders["hud"] = { files, _ in
             Entry(view: AnyView(JobHUDPreview(fileName: files.first?.lastPathComponent ?? "photo.jpg")), size: CGSize(width: 380, height: 150))
         }
