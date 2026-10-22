@@ -352,14 +352,15 @@ struct RangeTrack<Background: View>: View {
             let x = { (time: Double) -> CGFloat in handle + CGFloat(time / max(duration, 0.001)) * usable }
             let time = { (position: CGFloat) -> Double in Double((position - handle) / usable) * duration }
             ZStack(alignment: .topLeading) {
+                // Hit areas must be set before .offset, which moves drawing but not the layout frame.
                 background()
                     .frame(width: usable, height: proxy.size.height)
                     .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                    .offset(x: handle)
                     .contentShape(Rectangle())
                     .gesture(DragGesture(minimumDistance: 0).onChanged { value in
                         onScrub(max(0, min(duration, time(value.location.x + handle))))
                     })
+                    .offset(x: handle)
                 // Dim the parts outside the selection.
                 Rectangle().fill(Color.black.opacity(0.45))
                     .frame(width: max(0, x(start) - handle), height: proxy.size.height)
@@ -375,18 +376,20 @@ struct RangeTrack<Background: View>: View {
                     .frame(width: max(handle * 2, x(end) - x(start) + handle * 2), height: proxy.size.height)
                     .offset(x: x(start) - handle)
                     .allowsHitTesting(false)
-                grip(at: x(start) - handle, width: handle, height: proxy.size.height, edge: .leading)
+                grip(width: handle, height: proxy.size.height, edge: .leading)
                     .gesture(DragGesture(coordinateSpace: .named("track")).onChanged { value in
                         onEditingChanged(true)
                         start = max(0, min(end - minimumLength, time(value.location.x + handle / 2)))
                         onScrub(start)
                     }.onEnded { _ in onEditingChanged(false) })
-                grip(at: x(end), width: handle, height: proxy.size.height, edge: .trailing)
+                    .offset(x: x(start) - handle)
+                grip(width: handle, height: proxy.size.height, edge: .trailing)
                     .gesture(DragGesture(coordinateSpace: .named("track")).onChanged { value in
                         onEditingChanged(true)
                         end = min(duration, max(start + minimumLength, time(value.location.x - handle / 2)))
                         onScrub(end)
                     }.onEnded { _ in onEditingChanged(false) })
+                    .offset(x: x(end))
                 if let playhead {
                     Capsule()
                         .fill(Color.white)
@@ -396,18 +399,18 @@ struct RangeTrack<Background: View>: View {
                         .allowsHitTesting(false)
                 }
             }
+            .frame(width: width, height: proxy.size.height, alignment: .topLeading)
             .coordinateSpace(name: "track")
         }
     }
 
-    private func grip(at x: CGFloat, width: CGFloat, height: CGFloat, edge: HorizontalEdge) -> some View {
+    private func grip(width: CGFloat, height: CGFloat, edge: HorizontalEdge) -> some View {
         UnevenRoundedRectangle(cornerRadii: edge == .leading
                                ? .init(topLeading: 6, bottomLeading: 6)
                                : .init(bottomTrailing: 6, topTrailing: 6), style: .continuous)
             .fill(Brand.buttonOrange)
             .overlay(Capsule().fill(Color.white.opacity(0.9)).frame(width: 2.5, height: height * 0.36))
             .frame(width: width, height: height)
-            .offset(x: x)
             .contentShape(Rectangle())
             .onHover { inside in
                 if inside { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() }
