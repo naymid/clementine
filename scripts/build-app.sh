@@ -3,23 +3,28 @@
 #   scripts/build-app.sh            release build
 #   scripts/build-app.sh --debug    debug build (faster)
 #   scripts/build-app.sh --install  release build, copy to /Applications and launch
+#   scripts/build-app.sh --release  universal (arm64 + x86_64), ad-hoc signed, zipped for GitHub
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 CONFIG=release
 INSTALL=0
+RELEASE=0
 for arg in "$@"; do
   case $arg in
     --debug) CONFIG=debug ;;
     --install) INSTALL=1 ;;
+    --release) RELEASE=1; SIGN_ID=- ;;
   esac
 done
+ARCHS=()
+[[ $RELEASE == 1 ]] && ARCHS=(--arch arm64 --arch x86_64)
 
 VERSION=1.0
 BUILD_NUMBER=$(git rev-list --count HEAD 2>/dev/null || echo 1)
 
-swift build -c $CONFIG
-BIN=$(swift build -c $CONFIG --show-bin-path)/Clementine
+swift build -c $CONFIG $ARCHS
+BIN=$(swift build -c $CONFIG $ARCHS --show-bin-path)/Clementine
 
 APP=build/Clementine.app
 rm -rf $APP
@@ -65,6 +70,12 @@ PLIST
 SIGN_ID=${SIGN_ID:-$(security find-identity -v -p codesigning 2>/dev/null | grep -m1 "Apple Development" | awk '{print $2}')}
 codesign --force --deep --sign "${SIGN_ID:--}" $APP >/dev/null
 echo "Built $APP ($CONFIG, build $BUILD_NUMBER)"
+
+if [[ $RELEASE == 1 ]]; then
+  rm -f build/Clementine.zip
+  ditto -c -k --sequesterRsrc --keepParent $APP build/Clementine.zip
+  echo "Zipped build/Clementine.zip ($(du -h build/Clementine.zip | cut -f1))"
+fi
 
 if [[ $INSTALL == 1 ]]; then
   pkill -x Clementine 2>/dev/null || true

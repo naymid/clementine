@@ -172,7 +172,7 @@ xattr -dr com.apple.quarantine /Applications/Clementine.app
 
 3. A short tour shows the gesture, and Clementine moves into the menu bar (the citrus icon near the clock).
 
-Clementine needs **macOS 14 Sonoma or later**; the wheel uses Liquid Glass on macOS 26, with a Solid style if you prefer. Images, PDFs, text, archives and subtitles work out of the box. Audio, video and WebP need free encoders from [Homebrew](https://brew.sh):
+Clementine is a universal app (Apple silicon and Intel) and needs **macOS 14 Sonoma or later**; the wheel uses Liquid Glass on macOS 26, with a Solid style if you prefer. Images, PDFs, text, archives and subtitles work out of the box. Audio, video and WebP need free encoders from [Homebrew](https://brew.sh):
 
 ```bash
 brew install ffmpeg webp ghostscript
