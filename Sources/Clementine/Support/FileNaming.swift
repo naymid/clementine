@@ -46,7 +46,7 @@ enum FileNaming {
     static func formattedSize(_ bytes: Int64) -> String {
         let formatter = ByteCountFormatter()
         formatter.countStyle = .file
-        formatter.allowedUnits = [.useKB, .useMB, .useGB]
+        formatter.allowedUnits = bytes < 1000 ? [.useBytes] : [.useKB, .useMB, .useGB]
         return formatter.string(fromByteCount: bytes)
     }
 

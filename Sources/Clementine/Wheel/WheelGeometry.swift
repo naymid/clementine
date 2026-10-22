@@ -54,6 +54,13 @@ struct WheelGeometry {
 
     /// A rounded annular sector with uniform gaps between neighbours.
     func petalPath(index: Int, center: CGPoint) -> Path {
+        if count == 1 {
+            // A single action fills the whole ring.
+            var ring = Path()
+            ring.addEllipse(in: CGRect(x: center.x - outerRadius, y: center.y - outerRadius, width: outerRadius * 2, height: outerRadius * 2))
+            ring.addEllipse(in: CGRect(x: center.x - innerRadius, y: center.y - innerRadius, width: innerRadius * 2, height: innerRadius * 2))
+            return ring
+        }
         let mid = centerAngle(of: index)
         let a = mid - step / 2
         let b = mid + step / 2
@@ -134,6 +141,8 @@ struct PetalShape: Shape {
     var index: Int
 
     func path(in rect: CGRect) -> Path {
-        geometry.petalPath(index: index, center: CGPoint(x: rect.midX, y: rect.midY))
+        let path = geometry.petalPath(index: index, center: CGPoint(x: rect.midX, y: rect.midY))
+        // The single-petal ring is two ellipses; even-odd keeps the hole open.
+        return geometry.count == 1 ? path.normalized(eoFill: true) : path
     }
 }
