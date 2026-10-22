@@ -76,7 +76,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             .applicationIcon: Brand.appIcon(size: 256),
             .applicationVersion: Brand.version,
             .version: Brand.build,
-            .credits: NSAttributedString(string: "Hold. Drag. Drop.\nConverts and edits files right where they are.",
+            .credits: NSAttributedString(string: "Convert in mid-air.\nConverts and edits files right where they are.",
                                          attributes: [.font: NSFont.systemFont(ofSize: 11), .foregroundColor: NSColor.secondaryLabelColor]),
         ])
     }

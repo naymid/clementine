@@ -145,7 +145,7 @@ struct FoldersSettingsView: View {
     var body: some View {
         Form {
             Section("Folder Access") {
-                Text("\(Brand.appName) saves results beside the originals. It runs outside the App Store sandbox, so it can save in any folder you can write to without asking for each one.")
+                Text("\(Brand.appName) saves results beside the originals. It isn’t sandboxed, so there is no folder list to manage. macOS asks once, the first time it saves into Desktop, Documents or Downloads; click Allow and it won’t ask again.")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 10) {

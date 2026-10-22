@@ -43,7 +43,7 @@ cat > $APP/Contents/Info.plist <<PLIST
   <key>CFBundleName</key><string>Clementine</string>
   <key>CFBundleDisplayName</key><string>Clementine</string>
   <key>CFBundleExecutable</key><string>Clementine</string>
-  <key>CFBundleIdentifier</key><string>com.lucasdimyan.Clementine</string>
+  <key>CFBundleIdentifier</key><string>io.github.naymid.clementine</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
@@ -60,7 +60,10 @@ cat > $APP/Contents/Info.plist <<PLIST
 </plist>
 PLIST
 
-codesign --force --deep --sign - $APP >/dev/null
+# Sign with a stable identity when one exists: macOS privacy grants (Desktop, Documents…)
+# are tied to the signature, and ad-hoc signatures change on every build.
+SIGN_ID=${SIGN_ID:-$(security find-identity -v -p codesigning 2>/dev/null | grep -m1 "Apple Development" | awk '{print $2}')}
+codesign --force --deep --sign "${SIGN_ID:--}" $APP >/dev/null
 echo "Built $APP ($CONFIG, build $BUILD_NUMBER)"
 
 if [[ $INSTALL == 1 ]]; then

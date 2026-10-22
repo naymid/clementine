@@ -66,6 +66,7 @@ final class JobHUDController {
         panel.hidesOnDeactivate = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
         let hosting = NSHostingView(rootView: JobHUDView(center: center))
+        hosting.sizingOptions = []
         hosting.frame = panel.contentRect(forFrameRect: panel.frame)
         panel.contentView = hosting
         self.panel = panel

@@ -128,10 +128,10 @@ final class WelcomeModel: ObservableObject {
 
     var statusText: String {
         switch practice {
-        case .idle: return "A practice file. Nothing on your Mac changes."
-        case .demoHolding: return isToolsPage ? "Keep dragging and hold Option + Shift." : "Keep dragging and hold Shift."
-        case .demoWheel: return isToolsPage ? "Let go to use compress." : "Let go to make a PNG copy."
-        case .done: return isToolsPage ? "Done — the original and smaller copy are both here." : "Done — the original and new file are both here."
+        case .idle: return "Just practice: nothing on your Mac is changed."
+        case .demoHolding: return isToolsPage ? "Keep holding the file and press Option + Shift." : "Keep holding the file and press Shift."
+        case .demoWheel: return isToolsPage ? "Release over Compress." : "Release over PNG."
+        case .done: return isToolsPage ? "Done. A smaller copy now sits beside the original." : "Done. The PNG copy sits beside the original."
         }
     }
 

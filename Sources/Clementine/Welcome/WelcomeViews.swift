@@ -74,12 +74,12 @@ struct WelcomeTourView: View {
                     switch model.page {
                     case .holdDragDrop:
                         PracticePage(model: model,
-                                     title: "Hold. Drag. Drop.",
-                                     subtitle: "Hold \(AppSettings.shared.conversionModifier.names) while dragging a file.\nDrop it on the format you want. Try it below.")
+                                     title: "Convert in mid-air.",
+                                     subtitle: "Start dragging any file, then hold \(AppSettings.shared.conversionModifier.names).\nLet go over the format you want. Try it below.")
                     case .tools:
                         PracticePage(model: model,
-                                     title: "There’s a tool for that.",
-                                     subtitle: "Hold \(AppSettings.shared.toolsModifier.names) while dragging a file\nto open the tools wheel instead.")
+                                     title: "Edit without opening an app.",
+                                     subtitle: "Hold \(AppSettings.shared.toolsModifier.names) instead\nand the wheel fills with tools.")
                     case .saveBeside:
                         SaveBesidePage()
                     case .ready:
@@ -360,8 +360,8 @@ struct Keycap: View {
 struct SaveBesidePage: View {
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Save beside your files.",
-                       subtitle: "Results are saved next to the originals.\nThe original file is never changed.")
+            PageHeader(title: "Originals stay untouched.",
+                       subtitle: "Every result lands right next to the file it came from,\nwith a fresh name. Nothing is overwritten.")
             Spacer()
             ZStack {
                 Circle().fill(Brand.buttonOrange).frame(width: 110, height: 110)
@@ -369,11 +369,11 @@ struct SaveBesidePage: View {
                     .font(.system(size: 50, weight: .bold))
                     .foregroundStyle(.white)
             }
-            Text("\(Brand.appName) can save beside your files.")
+            Text("Results land beside your files.")
                 .font(.system(size: 17, weight: .semibold))
                 .padding(.top, 26)
             Spacer()
-            Text("\(Brand.appName) runs outside the App Store sandbox, so macOS won’t ask\nfor permission for each folder. Change defaults anytime in Settings → Formats.")
+            Text("macOS asks once before \(Brand.appName) first saves into Desktop, Documents\nor Downloads. Click Allow and it won’t ask again.")
                 .font(.system(size: 12.5))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -390,8 +390,8 @@ struct ReadyPage: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Ready when you are.",
-                       subtitle: "\(Brand.appName) lives in your menu bar.\nClick its little icon for settings or to take this tour again.")
+            PageHeader(title: "Find it in the menu bar.",
+                       subtitle: "The citrus icon near the clock opens Settings\nand this tour any time.")
             VStack(spacing: 14) {
                 ZStack(alignment: .bottomTrailing) {
                     HStack(spacing: 26) {

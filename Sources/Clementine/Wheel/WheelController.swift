@@ -186,6 +186,9 @@ final class WheelController {
         let dropView = WheelDropView(frame: .zero)
         dropView.controller = self
         let hosting = NSHostingView(rootView: WheelView(model: model))
+        // Without this the hosting view's fixed 300 pt size shrinks the panel from its
+        // top-left corner, and the wheel no longer opens centered under the pointer.
+        hosting.sizingOptions = []
         hosting.translatesAutoresizingMaskIntoConstraints = false
         dropView.addSubview(hosting)
         NSLayoutConstraint.activate([
