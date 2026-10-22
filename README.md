@@ -203,6 +203,7 @@ That builds `build/Clementine.app`, copies it to Applications and opens it. Othe
 
 | Command | What it does |
 |---|---|
+| `scripts/build-app.sh --release` | Builds the universal, zipped app that goes on the Releases page |
 | `scripts/test-matrix.sh` | Runs all 182 conversions on generated files and checks every output decodes |
 | `scripts/test-tools.sh` | Runs every tool's processing headlessly (29 tests) |
 | `Clementine --convert <file> <format>` | Converts one file from the command line |
