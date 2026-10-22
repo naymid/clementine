@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Clementine: convert files in mid-air</title>
+<meta name="description" content="A free, open-source Mac file converter and toolbox. Start dragging any file, hold Shift, and drop it on a format. 182 conversions and 27 tools, all on your Mac." />
+<meta property="og:title" content="Clementine: convert files in mid-air" />
+<meta property="og:description" content="Start dragging any file, hold Shift, drop it on a format. Free and open source for macOS." />
+<meta property="og:image" content="https://naymid.github.io/clementine/assets/hero-convert.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" type="image/png" href="assets/favicon.png" />
+<style>
+  :root {
+    --bg: #f7f4ef;
+    --bg-2: #efe9e0;
+    --surface: #ffffff;
+    --surface-2: #f6f1ea;
+    --line: rgba(40, 28, 16, 0.10);
+    --text: #1d1a16;
+    --muted: #6d665c;
+    --accent: #ff5a1f;
+    --accent-2: #ff8a1f;
+    --accent-soft: rgba(255, 90, 31, 0.10);
+    --shadow: 0 30px 80px -30px rgba(80, 40, 10, 0.35);
+    --chip: #f1ebe2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e0f13;
+      --bg-2: #13141a;
+      --surface: #17181e;
+      --surface-2: #1c1d24;
+      --line: rgba(255, 255, 255, 0.08);
+      --text: #f4f1ec;
+      --muted: #a29d94;
+      --accent-soft: rgba(255, 110, 40, 0.13);
+      --shadow: 0 40px 100px -30px rgba(0, 0, 0, 0.7);
+      --chip: #22232b;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 17px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  img, video { max-width: 100%; display: block; }
+  .wrap { width: min(1120px, 100% - 32px); margin: 0 auto; }
+
+  /* Nav */
+  nav {
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: saturate(160%) blur(18px);
+    -webkit-backdrop-filter: saturate(160%) blur(18px);
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    border-bottom: 1px solid var(--line);
+  }
+  nav .wrap { display: flex; align-items: center; gap: 22px; height: 58px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; text-decoration: none; letter-spacing: -0.01em; }
+  .brand img { width: 30px; height: 30px; }
+  nav .links { display: flex; gap: 20px; margin-left: auto; font-size: 14.5px; }
+  nav .links a { text-decoration: none; color: var(--muted); }
+  nav .links a:hover { color: var(--text); }
+  .gh { font-size: 14px; font-weight: 600; text-decoration: none; padding: 7px 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); }
+
+  /* Hero */
+  header.hero { position: relative; overflow: hidden; padding: 84px 0 40px; text-align: center; }
+  header.hero::before {
+    content: ""; position: absolute; inset: -40% -20% auto; height: 760px; z-index: -1;
+    background: radial-gradient(closest-side, rgba(255, 120, 40, 0.28), transparent 70%);
+  }
+  .eyebrow { display: inline-flex; gap: 8px; align-items: center; font-size: 13.5px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 6px 12px; border-radius: 999px; }
+  h1 { font-size: clamp(40px, 6.4vw, 76px); line-height: 1.02; letter-spacing: -0.035em; margin: 22px 0 18px; }
+  h1 span { background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lede { font-size: clamp(17px, 2vw, 20px); color: var(--muted); max-width: 680px; margin: 0 auto; }
+  .cta { display: flex; gap: 12px; justify-content: center; margin: 30px 0 12px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 9px; font-weight: 600; font-size: 16px; text-decoration: none; padding: 13px 22px; border-radius: 13px; }
+  .btn.primary { color: #fff; background: linear-gradient(180deg, #ff7a2f, #f2541a); box-shadow: 0 10px 30px -10px rgba(242, 84, 26, 0.8); }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn.secondary { border: 1px solid var(--line); background: var(--surface); }
+  .fine { font-size: 13.5px; color: var(--muted); }
+  .stage { margin: 46px auto 0; max-width: 980px; border-radius: 22px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); background: #1a1520; }
+  .stage video { width: 100%; height: auto; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin: 56px auto 0; max-width: 860px; background: var(--line); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+  .stats div { background: var(--surface); padding: 20px 10px; text-align: center; }
+  .stats b { display: block; font-size: 30px; letter-spacing: -0.02em; }
+  .stats span { font-size: 13.5px; color: var(--muted); }
+
+  /* Sections */
+  section { padding: 96px 0 0; }
+  h2 { font-size: clamp(30px, 4vw, 44px); letter-spacing: -0.03em; line-height: 1.08; margin: 0 0 14px; }
+  .sub { color: var(--muted); max-width: 640px; margin: 0 0 40px; font-size: 18px; }
+  .center { text-align: center; }
+  .center .sub { margin-left: auto; margin-right: auto; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 24px; }
+  .step-n { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; }
+  .card h3 { margin: 10px 0 6px; font-size: 20px; letter-spacing: -0.01em; }
+  .card p { margin: 0; color: var(--muted); font-size: 15.5px; }
+  kbd { font: 600 13px -apple-system, sans-serif; padding: 3px 8px; border-radius: 7px; border: 1px solid var(--line); border-bottom-width: 2px; background: var(--surface-2); }
+
+  .split { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; }
+  .split .media { border-radius: 20px; overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow); background: #1a1520; }
+  .bullets { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 12px; }
+  .bullets li { display: flex; gap: 12px; color: var(--muted); }
+  .bullets li::before { content: ""; flex: none; width: 8px; height: 8px; margin-top: 9px; border-radius: 50%; background: var(--accent); }
+  .bullets b { color: var(--text); font-weight: 600; }
+
+  .formats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .formats h3 { display: flex; justify-content: space-between; align-items: baseline; }
+  .formats h3 small { font-size: 13px; font-weight: 500; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chip { font-size: 12.5px; font-weight: 700; letter-spacing: 0.03em; padding: 5px 9px; border-radius: 8px; background: var(--chip); }
+  .chip.out { background: var(--accent-soft); color: var(--accent); }
+  .arrow { color: var(--muted); font-size: 13px; margin: 12px 0 0; }
+
+  .tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .tools .card h3 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin: 0 0 12px; }
+  .tool { padding: 10px 0; border-top: 1px solid var(--line); }
+  .tool:first-of-type { border-top: 0; padding-top: 0; }
+  .tool b { display: block; font-size: 15px; }
+  .tool span { display: block; font-size: 14px; color: var(--muted); line-height: 1.45; }
+
+  .gallery { columns: 3 320px; column-gap: 18px; }
+  .gallery figure { break-inside: avoid; margin: 0 0 18px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 16px; padding: 14px 14px 10px; }
+  .gallery figure a { display: block; }
+  .gallery figcaption { font-size: 13.5px; color: var(--muted); text-align: center; margin-top: 8px; }
+
+  .privacy { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  .install { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .code { position: relative; font: 14px/1.5 ui-monospace, "SF Mono", Menlo, monospace; background: #15161b; color: #f1ede6; border-radius: 12px; padding: 14px 16px; margin-top: 12px; overflow-x: auto; }
+  .code button { position: absolute; top: 9px; right: 9px; font: 600 12px -apple-system, sans-serif; color: #f1ede6; background: rgba(255, 255, 255, 0.1); border: 0; border-radius: 7px; padding: 5px 9px; cursor: pointer; }
+  ol.install-steps { margin: 12px 0 0; padding-left: 20px; color: var(--muted); }
+  ol.install-steps li { margin: 6px 0; }
+  ol.install-steps b { color: var(--text); }
+
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 20px; margin-bottom: 10px; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p { color: var(--muted); margin: 10px 0 0; }
+
+  footer { margin-top: 110px; padding: 34px 0 48px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+  footer .wrap { display: flex; gap: 18px; flex-wrap: wrap; justify-content: space-between; }
+
+  @media (max-width: 900px) {
+    nav .links { display: none; }
+    .steps, .privacy { grid-template-columns: 1fr 1fr; }
+    .split, .install { grid-template-columns: 1fr; }
+    .formats { grid-template-columns: 1fr 1fr; }
+    .tools { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .steps, .privacy, .formats, .tools { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    header.hero { padding-top: 56px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#"><img src="assets/icon.png" alt="" />Clementine</a>
+    <div class="links">
+      <a href="#how">How it works</a>
+      <a href="#formats">Formats</a>
+      <a href="#tools">Tools</a>
+      <a href="#gallery">Gallery</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <a class="gh" href="https://github.com/naymid/clementine">GitHub</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Free and open source · macOS 14+</span>
+    <h1>Convert files <span>in mid‑air.</span></h1>
+    <p class="lede">Start dragging any file, hold <kbd>⇧ Shift</kbd>, and let go over the format you want. Clementine is a file converter and toolbox that lives in your Mac's menu bar.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/naymid/clementine/releases/latest">Download for Mac</a>
+      <a class="btn secondary" href="https://github.com/naymid/clementine">View the source</a>
+    </div>
+    <p class="fine">Apple silicon · no account, no uploads, no free-use limit</p>
+    <div class="stage">
+      <video autoplay muted loop playsinline poster="assets/hero-convert.jpg" aria-label="Dragging a HEIC photo in Finder with Shift held: a wheel of formats opens and the photo is dropped on JPG">
+        <source src="assets/demo-convert.mp4" type="video/mp4" />
+      </video>
+    </div>
+    <div class="stats">
+      <div><b>182</b><span>conversions</span></div>
+      <div><b>27</b><span>editing tools</span></div>
+      <div><b>0</b><span>files uploaded</span></div>
+      <div><b>MIT</b><span>licensed</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="how">
+  <div class="wrap">
+    <h2>One gesture instead of an Export menu.</h2>
+    <p class="sub">No app to open, no dialog to fill in. The converted copy lands right next to the original, which is never touched.</p>
+    <div class="steps">
+      <div class="card">
+        <div class="step-n">Step 1</div>
+        <h3>Start dragging</h3>
+        <p>Grab a file, or several, in Finder, on the desktop, or in any app that drags files.</p>
+      </div>
+      <div class="card">
+        <div class="step-n">Step 2</div>
+        <h3>Hold <kbd>⇧</kbd></h3>
+        <p>A wheel of every format that file can become opens under your pointer, with the size in the middle.</p>
+      </div>
+      <div class="card">
+        <div class="step-n">Step 3</div>
+        <h3>Let go</h3>
+        <p>Drop on a format. A small panel shows progress, then Finder selects the new file.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap split">
+    <div>
+      <h2>Hold <kbd>⌥</kbd> <kbd>⇧</kbd> for the tools.</h2>
+      <p class="sub">The same gesture opens a wheel of tools for whatever you're dragging. Drop on one and its editor opens right where you let go.</p>
+      <ul class="bullets">
+        <li><span><b>Trim, split, crop and redact video</b> on a real timeline, with frame-accurate or instant cuts.</span></li>
+        <li><span><b>Annotate, adjust, crop and redact photos</b>, or put screenshots on a gradient background.</span></li>
+        <li><span><b>Normalize, trim and bleep audio</b>, or turn it into a waveform video.</span></li>
+        <li><span><b>Compress anything</b> to a preset or an exact file size.</span></li>
+      </ul>
+    </div>
+    <div class="media">
+      <video autoplay muted loop playsinline poster="assets/hero-tools.jpg" aria-label="Option+Shift dragging a video opens the tools wheel; dropping on Trim opens the Trim Video editor and saves a trimmed copy">
+        <source src="assets/demo-tools.mp4" type="video/mp4" />
+      </video>
+    </div>
+  </div>
+</section>
+
+<section id="formats">
+  <div class="wrap">
+    <h2>182 conversions, offline.</h2>
+    <p class="sub">Drop several files at once and the wheel offers the formats they share. Each format keeps its own defaults for quality, bitrate, size and metadata.</p>
+    <div class="formats">
+      <div class="card">
+        <h3>Images <small>8 in</small></h3>
+        <div class="chips"><span class="chip">JPG</span><span class="chip">PNG</span><span class="chip">HEIC</span><span class="chip">WEBP</span><span class="chip">AVIF</span><span class="chip">TIFF</span><span class="chip">BMP</span><span class="chip">SVG</span></div>
+        <p class="arrow">becomes</p>
+        <div class="chips"><span class="chip out">JPG</span><span class="chip out">PNG</span><span class="chip out">HEIC</span><span class="chip out">WEBP</span><span class="chip out">AVIF</span><span class="chip out">TIFF</span><span class="chip out">BMP</span><span class="chip out">PDF</span><span class="chip out">DOCX</span></div>
+      </div>
+      <div class="card">
+        <h3>Video <small>7 in</small></h3>
+        <div class="chips"><span class="chip">MP4</span><span class="chip">MOV</span><span class="chip">MKV</span><span class="chip">WEBM</span><span class="chip">AVI</span><span class="chip">WMV</span><span class="chip">GIF</span></div>
+        <p class="arrow">becomes</p>
+        <div class="chips"><span class="chip out">MP4</span><span class="chip out">MOV</span><span class="chip out">MKV</span><span class="chip out">AVI</span><span class="chip out">WMV</span><span class="chip out">GIF</span><span class="chip out">MP3</span></div>
+      </div>
+      <div class="card">
+        <h3>Audio <small>8 in</small></h3>
+        <div class="chips"><span class="chip">MP3</span><span class="chip">M4A</span><span class="chip">WAV</span><span class="chip">FLAC</span><span class="chip">OGG</span><span class="chip">OPUS</span><span class="chip">AIFF</span><span class="chip">WMA</span></div>
+        <p class="arrow">becomes any of the other seven</p>
+      </div>
+      <div class="card">
+        <h3>Documents <small>2 in</small></h3>
+        <div class="chips"><span class="chip">PDF</span><span class="chip">TXT</span></div>
+        <p class="arrow">becomes</p>
+        <div class="chips"><span class="chip out">DOCX</span><span class="chip out">TXT</span><span class="chip out">PDF</span><span class="chip out">JPG</span><span class="chip out">PNG</span><span class="chip out">SRT</span><span class="chip out">VTT</span></div>
+      </div>
+      <div class="card">
+        <h3>Archives <small>4 in</small></h3>
+        <div class="chips"><span class="chip">ZIP</span><span class="chip">TAR</span><span class="chip">TAR.GZ</span><span class="chip">RAR</span></div>
+        <p class="arrow">becomes any of the others, including RAR</p>
+      </div>
+      <div class="card">
+        <h3>Subtitles <small>2 in</small></h3>
+        <div class="chips"><span class="chip">SRT</span><span class="chip">VTT</span></div>
+        <p class="arrow">becomes</p>
+        <div class="chips"><span class="chip out">SRT</span><span class="chip out">VTT</span><span class="chip out">TXT</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tools">
+  <div class="wrap">
+    <h2>27 tools, one wheel away.</h2>
+    <p class="sub">Each opens in a compact editor and saves a new copy beside the original.</p>
+    <div class="tools">
+      <div class="card">
+        <h3>Photos</h3>
+        <div class="tool"><b>Adjust</b><span>22 sliders for light, color and effects.</span></div>
+        <div class="tool"><b>Annotate</b><span>Arrows, shapes, text, callouts, magnifier.</span></div>
+        <div class="tool"><b>Background</b><span>Gradients, padding, corners, shadow.</span></div>
+        <div class="tool"><b>Crop</b><span>Presets, exact sizes, whole batches.</span></div>
+        <div class="tool"><b>Redact</b><span>Blur or block; finds faces and text.</span></div>
+        <div class="tool"><b>Collage</b><span>Grid, row, column or featured.</span></div>
+      </div>
+      <div class="card">
+        <h3>Video</h3>
+        <div class="tool"><b>Trim</b><span>Frame-accurate or instant.</span></div>
+        <div class="tool"><b>Crop</b><span>Handles or aspect presets.</span></div>
+        <div class="tool"><b>Speed</b><span>0.25× to 4×, pitch kept.</span></div>
+        <div class="tool"><b>Split</b><span>Cut, remove clips, export or join.</span></div>
+        <div class="tool"><b>Snapshots</b><span>Full-resolution stills.</span></div>
+        <div class="tool"><b>Redact</b><span>Timed boxes, solid or blur.</span></div>
+        <div class="tool"><b>Join</b><span>Combine clips into one.</span></div>
+        <div class="tool"><b>Mute</b><span>Drop the audio instantly.</span></div>
+      </div>
+      <div class="card">
+        <h3>Audio</h3>
+        <div class="tool"><b>Trim</b><span>Waveform, with silence auto-trim.</span></div>
+        <div class="tool"><b>Normalize</b><span>Podcast, streaming or broadcast loudness.</span></div>
+        <div class="tool"><b>Channels</b><span>Mono or stereo, with balance.</span></div>
+        <div class="tool"><b>Visualizer</b><span>Waveform or bars as an MP4.</span></div>
+        <div class="tool"><b>Bleep</b><span>Mark words, swap in a tone.</span></div>
+      </div>
+      <div class="card">
+        <h3>Everything else</h3>
+        <div class="tool"><b>Compress</b><span>Presets or an exact target size.</span></div>
+        <div class="tool"><b>Metadata</b><span>See, edit or strip location and camera data.</span></div>
+        <div class="tool"><b>Split · Organize · Merge PDF</b><span>Reorder, rotate, combine.</span></div>
+        <div class="tool"><b>Create PDF</b><span>Images into one document.</span></div>
+        <div class="tool"><b>Read QR Codes</b><span>From images and PDF pages.</span></div>
+        <div class="tool"><b>Extract</b><span>ZIP, TAR, TAR.GZ and RAR.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="gallery">
+  <div class="wrap">
+    <h2>A look inside.</h2>
+    <p class="sub">Real windows from the app. Click any of them for the full size.</p>
+    <div class="gallery">
+      <figure><a href="assets/editors/annotate.png"><img loading="lazy" src="assets/editors/annotate.png" alt="Annotate Photo editor" /></a><figcaption>Annotate Photo</figcaption></figure>
+      <figure><a href="assets/editors/trim-video.png"><img loading="lazy" src="assets/editors/trim-video.png" alt="Trim Video editor" /></a><figcaption>Trim Video</figcaption></figure>
+      <figure><a href="assets/editors/background.png"><img loading="lazy" src="assets/editors/background.png" alt="Change Background editor" /></a><figcaption>Change Background</figcaption></figure>
+      <figure><a href="assets/screens/metadata.png"><img loading="lazy" src="assets/screens/metadata.png" alt="Metadata editor" /></a><figcaption>Metadata</figcaption></figure>
+      <figure><a href="assets/editors/split-video.png"><img loading="lazy" src="assets/editors/split-video.png" alt="Split Video editor" /></a><figcaption>Split Video</figcaption></figure>
+      <figure><a href="assets/editors/adjust.png"><img loading="lazy" src="assets/editors/adjust.png" alt="Adjust Photo editor" /></a><figcaption>Adjust Photo</figcaption></figure>
+      <figure><a href="assets/editors/normalize.png"><img loading="lazy" src="assets/editors/normalize.png" alt="Normalize Volume editor" /></a><figcaption>Normalize Volume</figcaption></figure>
+      <figure><a href="assets/editors/redact-video.png"><img loading="lazy" src="assets/editors/redact-video.png" alt="Redact Video editor" /></a><figcaption>Redact Video</figcaption></figure>
+      <figure><a href="assets/editors/compress.png"><img loading="lazy" src="assets/editors/compress.png" alt="Compress editor" /></a><figcaption>Compress</figcaption></figure>
+      <figure><a href="assets/editors/organize-pdf.png"><img loading="lazy" src="assets/editors/organize-pdf.png" alt="Organize PDF editor" /></a><figcaption>Organize PDF</figcaption></figure>
+      <figure><a href="assets/editors/crop.png"><img loading="lazy" src="assets/editors/crop.png" alt="Crop Image editor" /></a><figcaption>Crop Image</figcaption></figure>
+      <figure><a href="assets/editors/bleep.png"><img loading="lazy" src="assets/editors/bleep.png" alt="Bleep Audio editor" /></a><figcaption>Bleep Audio</figcaption></figure>
+      <figure><a href="assets/editors/collage.png"><img loading="lazy" src="assets/editors/collage.png" alt="Create Collage editor" /></a><figcaption>Create Collage</figcaption></figure>
+      <figure><a href="assets/editors/speed.png"><img loading="lazy" src="assets/editors/speed.png" alt="Change Video Speed editor" /></a><figcaption>Change Video Speed</figcaption></figure>
+      <figure><a href="assets/editors/visualizer.png"><img loading="lazy" src="assets/editors/visualizer.png" alt="Audio Visualizer editor" /></a><figcaption>Audio Visualizer</figcaption></figure>
+      <figure><a href="assets/editors/redact-photo.png"><img loading="lazy" src="assets/editors/redact-photo.png" alt="Redact Photo editor" /></a><figcaption>Redact Photo</figcaption></figure>
+      <figure><a href="assets/editors/channels.png"><img loading="lazy" src="assets/editors/channels.png" alt="Convert Audio Channels editor" /></a><figcaption>Audio Channels</figcaption></figure>
+      <figure><a href="assets/editors/split-pdf.png"><img loading="lazy" src="assets/editors/split-pdf.png" alt="Split PDF editor" /></a><figcaption>Split PDF</figcaption></figure>
+      <figure><a href="assets/screens/tour.png"><img loading="lazy" src="assets/screens/tour.png" alt="Getting Started tour" /></a><figcaption>Getting Started tour</figcaption></figure>
+      <figure><a href="assets/screens/compat.png"><img loading="lazy" src="assets/screens/compat.png" alt="Settings, Compatibility tab" /></a><figcaption>Settings → Compatibility</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="privacy">
+  <div class="wrap">
+    <h2>Your files stay on your Mac.</h2>
+    <p class="sub">There is no network code in Clementine at all.</p>
+    <div class="privacy">
+      <div class="card"><h3>No uploads</h3><p>Everything runs on-device with ImageIO, PDFKit, AVFoundation, Vision and local encoders.</p></div>
+      <div class="card"><h3>No special access</h3><p>It sees drags through the system drag pasteboard. No Accessibility or Screen Recording permission.</p></div>
+      <div class="card"><h3>Originals untouched</h3><p>Every result is a new file with a fresh name, right next to the one it came from.</p></div>
+      <div class="card"><h3>Metadata, your call</h3><p>Keep or drop it per format, or strip location and camera data in one drop.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <h2>Install in a minute.</h2>
+    <p class="sub">macOS 14 Sonoma or later. Liquid Glass on macOS 26, with a Solid style if you prefer.</p>
+    <div class="install">
+      <div class="card">
+        <h3>Download</h3>
+        <ol class="install-steps">
+          <li>Get <b>Clementine.zip</b> from the <a href="https://github.com/naymid/clementine/releases/latest">latest release</a>, unzip it and drag <b>Clementine</b> into Applications.</li>
+          <li>It isn't notarized yet, so on first launch macOS says it can't verify it. Click <b>Done</b>, then <b>System Settings → Privacy &amp; Security → Open Anyway</b>. Or run:</li>
+        </ol>
+        <div class="code"><button data-copy>Copy</button><code>xattr -dr com.apple.quarantine /Applications/Clementine.app</code></div>
+      </div>
+      <div class="card">
+        <h3>Encoders for audio, video and WebP</h3>
+        <p>Images, PDFs, text, archives and subtitles work out of the box. Audio, video and WebP use free encoders from Homebrew; Ghostscript makes PDF compression stronger.</p>
+        <div class="code"><button data-copy>Copy</button><code>brew install ffmpeg webp ghostscript</code></div>
+        <p class="fine" style="margin-top:14px">Or build it yourself: <a href="https://github.com/naymid/clementine#build-from-source">build from source</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <h2>Questions.</h2>
+    <details><summary>I hold Shift and nothing happens.</summary><p>The wheel only opens during a real drag. Press on the file and move it a little until you see it under the pointer, then hold Shift. Dragging straight out of the Photos app doesn't hand over a file; drag the photo to the desktop first.</p></details>
+    <details><summary>Shift already does something in my app while dragging.</summary><p>Pick another modifier combination for either wheel in Settings → General → Drag Modifiers.</p></details>
+    <details><summary>Why does macOS ask about my Desktop folder?</summary><p>macOS asks every app once before it writes into Desktop, Documents or Downloads. Click Allow and Clementine can save beside your files there from then on.</p></details>
+    <details><summary>Why don't I see audio or video formats?</summary><p>Install the encoders with <code>brew install ffmpeg webp</code>. Clementine finds them automatically.</p></details>
+    <details><summary>Is it really free?</summary><p>Yes. MIT-licensed, no free-use limit, no account, no in-app purchase.</p></details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Clementine · <a href="https://github.com/naymid/clementine/blob/main/LICENSE">MIT License</a> · <a href="https://github.com/naymid/clementine">Source on GitHub</a></span>
+    <span>Inspired by Tangerine and <a href="https://github.com/iandifilippo/Kumquat">Kumquat</a>. Built with Claude Code.</span>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll("[data-copy]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var text = button.parentElement.querySelector("code").textContent;
+      navigator.clipboard.writeText(text).then(function () {
+        button.textContent = "Copied";
+        setTimeout(function () { button.textContent = "Copy"; }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>

@@ -20,6 +20,12 @@ extension SnapshotRegistry {
                 return Entry(view: AnyView(WelcomeTourView(model: model, onFinish: {})), size: CGSize(width: 560, height: 570))
             }
         }
+        builders["compatibility"] = { _, _ in
+            Entry(view: AnyView(CompatibilitySettingsView()), size: CGSize(width: 456, height: 1180))
+        }
+        builders["formats"] = { _, _ in
+            Entry(view: AnyView(FormatsSettingsView()), size: CGSize(width: 456, height: 520))
+        }
         builders["welcome-splash"] = { _, _ in
             Entry(view: AnyView(WelcomeSplashView(onContinue: {}, onClose: {})), size: CGSize(width: 640, height: 420))
         }

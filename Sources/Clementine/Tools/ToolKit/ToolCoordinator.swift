@@ -137,15 +137,35 @@ final class ToolWindowController: NSObject, NSWindowDelegate {
         window.delegate = self
         window.level = .floating
         window.collectionBehavior = [.fullScreenAuxiliary, .moveToActiveSpace]
+        let hosting = NSHostingView(rootView: editor.view.environmentObject(session))
+        // The window keeps the editor's designed size. Letting SwiftUI drive it made
+        // several editors grow taller than the screen (its minimum-size estimate is greedy).
+        hosting.sizingOptions = []
+        window.contentView = hosting
+        window.setContentSize(editor.size)
         if let minSize = editor.minSize { window.contentMinSize = minSize }
-        window.contentView = NSHostingView(rootView: editor.view.environmentObject(session))
         session.window = window
     }
 
     func show() {
         NSApp.activate(ignoringOtherApps: true)
-        window.center()
+        placeNearPointer()
         window.makeKeyAndOrderFront(nil)
+    }
+
+    /// Opens the editor where the file was dropped, kept fully on that screen.
+    private func placeNearPointer() {
+        let pointer = NSEvent.mouseLocation
+        guard let screen = NSScreen.screens.first(where: { NSMouseInRect(pointer, $0.frame, false) }) else {
+            window.center()
+            return
+        }
+        let visible = screen.visibleFrame.insetBy(dx: 12, dy: 12)
+        let size = window.frame.size
+        var origin = NSPoint(x: pointer.x - size.width / 2, y: pointer.y - size.height / 2)
+        origin.x = min(max(origin.x, visible.minX), visible.maxX - size.width)
+        origin.y = min(max(origin.y, visible.minY), visible.maxY - size.height)
+        window.setFrameOrigin(origin)
     }
 
     func windowWillClose(_ notification: Notification) {

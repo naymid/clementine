@@ -72,8 +72,19 @@ enum DebugHooks {
                 }
             }
         }
-        if environment["CLEMENTINE_DEMO_SETTINGS"] != nil {
-            SettingsWindowController.shared.show()
+        if let tab = environment["CLEMENTINE_DEMO_SETTINGS"] {
+            SettingsWindowController.shared.show(tab: SettingsTab(rawValue: tab))
+        }
+        // CLEMENTINE_OPEN_TOOL="trimVideo|/path/a.mov|/path/b.mov" opens that editor at launch.
+        if let spec = environment["CLEMENTINE_OPEN_TOOL"] {
+            let parts = spec.split(separator: "|").map(String.init)
+            if let tool = parts.first.flatMap(FileTool.init(rawValue:)) {
+                let urls = parts.dropFirst().map { URL(fileURLWithPath: $0) }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { ToolCoordinator.shared.open(tool, urls: Array(urls)) }
+            }
+        }
+        if environment["CLEMENTINE_OPEN_WELCOME"] != nil {
+            WelcomeWindowController.shared.show(skipIntro: environment["CLEMENTINE_OPEN_WELCOME"] == "tour")
         }
     }
 }
