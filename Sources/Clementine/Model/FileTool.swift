@@ -157,7 +157,7 @@ enum FileTool: String, CaseIterable, Codable, Identifiable {
     /// Tools that act immediately on drop instead of opening an editor.
     var runsImmediately: Bool {
         switch self {
-        case .muteVideo, .extractArchive, .readQRCode: return true
+        case .muteVideo, .extractArchive: return true
         default: return false
         }
     }
