@@ -165,7 +165,6 @@ enum FileTool: String, CaseIterable, Codable, Identifiable {
     /// Whether the tool works on this selection of files.
     func applies(to formats: [FileFormat]) -> Bool {
         guard !formats.isEmpty else { return false }
-        let families = Set(formats.map(\.family))
         let allImages = formats.allSatisfy { $0.family == .image }
         let allVideo = formats.allSatisfy { $0.family == .video && $0 != .gif }
         let allAudio = formats.allSatisfy { $0.family == .audio }
@@ -175,7 +174,8 @@ enum FileTool: String, CaseIterable, Codable, Identifiable {
         case .compress:
             return formats.allSatisfy { [.jpg, .png, .webp, .heic, .tiff, .avif, .bmp, .pdf, .gif].contains($0) || $0.family == .video || $0.family == .audio }
         case .removeMetadata:
-            return formats.allSatisfy { [.jpg, .png, .webp, .heic, .tiff, .avif, .pdf].contains($0) || $0.family == .video || $0.family == .audio } && families.count == 1
+            // Any mix of photos, video, audio and PDFs: several files open the batch stripper.
+            return formats.allSatisfy { [.jpg, .png, .webp, .heic, .tiff, .avif, .pdf].contains($0) || $0.family == .video || $0.family == .audio }
         case .editImage, .frameImage, .cropImage:
             return allImages && !formats.contains(.svg)
         case .annotateImage, .redactImage:

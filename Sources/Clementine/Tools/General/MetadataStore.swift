@@ -67,13 +67,23 @@ enum MetadataStore {
         }
     }
 
-    /// Removes everything removable and saves "<name>-clean".
-    static func removeAll(_ url: URL, context: JobContext) async throws -> URL {
-        let output = FileNaming.output(beside: url, suffix: "-clean", extension: url.pathExtension)
+    /// Removes everything removable and saves "<name>-clean" beside the original, or a
+    /// same-named copy inside `directory` when one is given.
+    static func removeAll(_ url: URL, into directory: URL? = nil, context: JobContext) async throws -> URL {
+        let output: URL
+        if let directory {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            output = FileNaming.uniqueURL(in: directory, base: FileNaming.baseName(of: url), extension: url.pathExtension)
+        } else {
+            output = FileNaming.output(beside: url, suffix: "-clean", extension: url.pathExtension)
+        }
         try await write(url, to: output, context: context) { scratch in
             switch kind(of: url) {
             case .image: try ImageMetadataIO.removeAll(url, to: scratch)
-            case .media: try await MediaMetadataIO.write(url, to: scratch, changes: nil, context: context)
+            case .media:
+                try await MediaMetadataIO.write(url, to: scratch, changes: nil, context: context)
+                // Text in subtitle tracks can mention AI names, so only check the container's credentials.
+                try MetadataScanner.verifyStripped(scratch, name: url.lastPathComponent, checking: [.contentCredentials])
             case .pdf: try PDFMetadataIO.write(url, to: scratch, changes: nil)
             case nil: throw GeneralToolFailure("This file type is not supported.")
             }
@@ -300,11 +310,14 @@ enum ImageMetadataIO {
         switch format {
         case .jpg:
             try copySource(source, metadata: orientationOnlyMetadata(orientation), excludeGPS: true, excludeXMP: true, to: output)
+            // ImageIO can carry unknown blocks over; drop C2PA, IPTC, comments and XMP at the segment level.
+            try MetadataContainers.stripJPEGSegments(try Data(contentsOf: output)).write(to: output)
         case .png where orientation == 1:
             try MetadataContainers.stripPNG(try Data(contentsOf: url)).write(to: output)
         case .heic, .avif:
             var bytes = [UInt8](try Data(contentsOf: url))
             try MetadataContainers.neutralizeHEIFMetadata(&bytes)
+            try MetadataContainers.neutralizeBMFFC2PA(&bytes)
             try Data(bytes).write(to: output)
         case .webp:
             var data = try MetadataContainers.stripWebP(try Data(contentsOf: url))
@@ -324,6 +337,7 @@ enum ImageMetadataIO {
         }
         try verifyPixels(url, output, lossless: true)
         try verifyClean(output, name: url.lastPathComponent)
+        try MetadataScanner.verifyStripped(output, name: url.lastPathComponent, checking: [.aiTags, .prompt, .contentCredentials])
     }
 
     static func apply(_ changes: MetadataChanges, _ url: URL, to output: URL) throws {

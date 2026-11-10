@@ -10,6 +10,8 @@ struct MetadataEditorView: View {
     @State private var reports: [URL: MetadataReport] = [:]
     @State private var failures: [URL: String] = [:]
     @State private var changes: [URL: MetadataChanges] = [:]
+    /// AI tags, Content Credentials and prompts found in the bytes, which ImageIO doesn't list.
+    @State private var hidden: [URL: PrivacyFindings] = [:]
 
     /// Snapshot hook: pre-marks fields as removed or edited.
     var initialChanges: MetadataChanges?
@@ -68,13 +70,16 @@ struct MetadataEditorView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     removeAllCard
-                    if report.isEmpty {
+                    if let found = hidden[url], !found.isEmpty {
+                        hiddenDataCard(found)
+                    }
+                    if report.isEmpty && (hidden[url] ?? []).isEmpty {
                         Label(MetadataText.empty, systemImage: "checkmark.seal")
                             .font(.system(size: 13))
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 24)
-                    } else {
+                    } else if !report.isEmpty {
                         privacySummary(report)
                         ForEach(report.sections) { section in
                             sectionView(section)
@@ -107,6 +112,28 @@ struct MetadataEditorView: View {
         .padding(12)
         .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Brand.buttonOrange.opacity(0.07)))
         .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Brand.buttonOrange.opacity(0.18)))
+    }
+
+    /// Lists data that only Remove All can clear because it isn't stored as individual fields.
+    private func hiddenDataCard(_ found: PrivacyFindings) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "sparkles")
+                .foregroundStyle(Color(red: 0.62, green: 0.40, blue: 0.95))
+                .padding(.top, 1)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 5) {
+                    ForEach(found.labels, id: \.0.rawValue) { _, label in
+                        MetadataBadge(text: label, color: Color(red: 0.62, green: 0.40, blue: 0.95))
+                    }
+                }
+                Text("Found in the file's hidden blocks. Remove All clears them.")
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.primary.opacity(0.04)))
     }
 
     @ViewBuilder
@@ -195,6 +222,8 @@ struct MetadataEditorView: View {
         for url in session.urls where reports[url] == nil && failures[url] == nil {
             do {
                 reports[url] = try await MetadataStore.read(url)
+                // Only the byte-level kinds; fields already show location, camera and author.
+                hidden[url] = MetadataScanner.markers(in: MetadataScanner.bytes(of: url))
             } catch {
                 failures[url] = error.localizedDescription
             }

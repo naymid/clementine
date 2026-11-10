@@ -11,7 +11,7 @@ enum GeneralTools: ToolGroup {
         case .compress:
             return ToolEditor(CompressEditorView(session: session), size: CGSize(width: 440, height: 540), minSize: CGSize(width: 400, height: 400))
         case .removeMetadata:
-            return ToolEditor(MetadataEditorView(session: session), size: CGSize(width: 580, height: 620), minSize: CGSize(width: 460, height: 420))
+            return ToolEditor(MetadataToolView(session: session), size: CGSize(width: 600, height: 620), minSize: CGSize(width: 480, height: 420))
         case .splitPDF:
             return ToolEditor(SplitPDFEditorView(session: session), size: CGSize(width: 600, height: 600), minSize: CGSize(width: 460, height: 420))
         case .organizePDF:

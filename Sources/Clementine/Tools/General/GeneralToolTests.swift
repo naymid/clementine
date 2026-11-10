@@ -26,6 +26,30 @@ extension GeneralTools {
             return outputs
         }
 
+        // scanMetadata: prints what the batch stripper's scanner finds in each file.
+        ToolTestRegistry.tests["scanMetadata"] = { files, _, _ in
+            for file in files {
+                let scan = await MetadataScanner.scan(file)
+                let labels = scan.findings.labels.map(\.1).joined(separator: ", ")
+                print("scan: \(file.lastPathComponent): [\(labels)] fields=\(scan.fieldCount)")
+            }
+            return []
+        }
+
+        // stripBatch [folder=1]: the batch stripper's Remove All, optionally into a "Clean" folder.
+        ToolTestRegistry.tests["stripBatch"] = { files, options, context in
+            var outputs: [URL] = []
+            for file in files {
+                let folder = GeneralTestOptions.bool(options, "folder") ? file.deletingLastPathComponent().appendingPathComponent("Clean", isDirectory: true) : nil
+                do {
+                    outputs.append(try await MetadataStore.removeAll(file, into: folder, context: context))
+                } catch {
+                    print("stripBatch: \(file.lastPathComponent) FAILED: \(error.localizedDescription)")
+                }
+            }
+            return outputs
+        }
+
         // removeMetadata [mode=list|all|edit] [remove=<id>,<id>|gps|sensitive] [set:<id>=value]
         ToolTestRegistry.tests["removeMetadata"] = { files, options, context in
             var outputs: [URL] = []

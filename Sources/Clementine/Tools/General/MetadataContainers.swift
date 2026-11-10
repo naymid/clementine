@@ -33,7 +33,7 @@ enum MetadataContainers {
 
     // MARK: WebP
 
-    private static let webPMetadataChunks: Set<String> = ["EXIF", "XMP "]
+    private static let webPMetadataChunks: Set<String> = ["EXIF", "XMP ", "C2PA"]
 
     private struct RIFFChunk {
         var fourCC: String
@@ -159,7 +159,7 @@ enum MetadataContainers {
                     var contentType: [UInt8] = []
                     while cursor < infe.end && bytes[cursor] != 0 { contentType.append(bytes[cursor]); cursor += 1 }
                     let name = String(decoding: contentType, as: UTF8.self).lowercased()
-                    if name.contains("rdf+xml") || name.contains("xmp") { targets[itemID] = typeOffset }
+                    if name.contains("rdf+xml") || name.contains("xmp") || name.contains("c2pa") { targets[itemID] = typeOffset }
                 }
             }
         }
@@ -214,6 +214,61 @@ enum MetadataContainers {
             bytes.replaceSubrange(offset..<(offset + 4), with: Array("free".utf8))
         }
         return targets.count
+    }
+
+    // MARK: C2PA in ISO BMFF (HEIF, AVIF)
+
+    private static let c2paBoxUUID: [UInt8] = [0xD8, 0xFE, 0xC3, 0xD6, 0x1B, 0x0E, 0x48, 0x3C,
+                                               0x92, 0x97, 0x58, 0x28, 0x87, 0x7E, 0xC4, 0x81]
+
+    /// Turns top-level C2PA 'uuid' boxes into zeroed 'free' boxes of the same size, so no
+    /// image offsets move. Returns how many were wiped.
+    @discardableResult
+    static func neutralizeBMFFC2PA(_ bytes: inout [UInt8]) throws -> Int {
+        var wiped = 0
+        for box in try boxes(bytes, from: 0, to: bytes.count) where box.type == "uuid" {
+            guard box.contentStart + 16 <= box.end, Array(bytes[box.contentStart..<(box.contentStart + 16)]) == c2paBoxUUID else { continue }
+            bytes.replaceSubrange((box.contentStart - 4)..<box.contentStart, with: Array("free".utf8))
+            for index in box.contentStart..<box.end { bytes[index] = 0 }
+            wiped += 1
+        }
+        return wiped
+    }
+
+    // MARK: JPEG segments
+
+    /// Drops the JPEG segments that only carry metadata: APP11 (JUMBF/C2PA), APP13
+    /// (Photoshop/IPTC), comments and XMP. Image data, color (APP2 ICC, MPF) and the
+    /// minimal EXIF with the orientation stay. Everything after Start of Scan is copied as is.
+    static func stripJPEGSegments(_ data: Data) throws -> Data {
+        let bytes = [UInt8](data)
+        guard bytes.count > 4, bytes[0] == 0xFF, bytes[1] == 0xD8 else { throw fail() }
+        let xmpHeaders = [Array("http://ns.adobe.com/xap/1.0/".utf8), Array("http://ns.adobe.com/xmp/extension/".utf8)]
+        var output: [UInt8] = [0xFF, 0xD8]
+        var offset = 2
+        while offset + 4 <= bytes.count {
+            guard bytes[offset] == 0xFF else { throw fail() }
+            let marker = bytes[offset + 1]
+            if marker == 0xFF { offset += 1; continue }                 // fill byte
+            if marker == 0xDA || marker == 0xD9 {                       // Start of Scan / End of Image
+                output += bytes[offset...]
+                return Data(output)
+            }
+            if (0xD0...0xD7).contains(marker) || marker == 0x01 {       // markers without a length
+                output += bytes[offset..<(offset + 2)]
+                offset += 2
+                continue
+            }
+            let length = Int(bytes[offset + 2]) << 8 | Int(bytes[offset + 3])
+            let end = offset + 2 + length
+            guard length >= 2, end <= bytes.count else { throw fail() }
+            let payload = Array(bytes[(offset + 4)..<end])
+            let isXMP = marker == 0xE1 && xmpHeaders.contains { payload.starts(with: $0) }
+            let drop = marker == 0xEB || marker == 0xED || marker == 0xFE || isXMP
+            if !drop { output += bytes[offset..<end] }
+            offset = end
+        }
+        throw fail()
     }
 
     // MARK: EXIF/XMP blobs for WebP
