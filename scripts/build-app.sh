@@ -20,7 +20,7 @@ done
 ARCHS=()
 [[ $RELEASE == 1 ]] && ARCHS=(--arch arm64 --arch x86_64)
 
-VERSION=1.0
+VERSION=1.1
 BUILD_NUMBER=$(git rev-list --count HEAD 2>/dev/null || echo 1)
 
 swift build -c $CONFIG $ARCHS

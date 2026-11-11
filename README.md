@@ -106,7 +106,7 @@ Drop several files at once and the wheel offers the formats they all share. Ever
 | Tool | What it does |
 |---|---|
 | **Compress** | Smaller images, GIFs, video, audio and PDFs, with Balanced/Strong presets or an exact target size. If the result wouldn't be smaller, nothing is saved. |
-| **Metadata** | See every field (location, camera, owner, software…), edit text fields, remove any of them or all of them. Photos are cleaned without re-compressing. |
+| **Metadata** | See every field (location, camera, owner, software…), edit text fields, remove any of them or all of them. Drop a batch of photos, videos, audio or PDFs to see which ones carry location, camera, author, AI tags, Content Credentials (C2PA) or generation prompts, and strip them all in one click. Photos are cleaned without re-compressing. |
 | **Split PDF** | Every page, every N pages, or custom ranges. |
 | **Organize PDF** | Drag pages to reorder, rotate or delete them, and make every page the same width. |
 | **Merge PDFs** | Combine PDFs in the order you choose. |
